@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SLAMS - Late Entry System</title>
+  <style>
+    body {
+      font-family: "Segoe UI", Arial, sans-serif;
+      padding: 20px;
+      max-width: 1000px;
+      margin: 0 auto;
+      background: linear-gradient(135deg, #fdfbfb, #ebedee);
+    }
+    header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    header img {
+      max-width: 150px;
+      display: block;
+      margin: 0 auto 10px;
+    }
+    header h1 {
+      font-size: 28px;
+      color: #2c3e50;
+      margin: 5px 0;
+    }
+    header h2 {
+      font-size: 20px;
+      color: #16a085;
+      margin: 0;
+    }
+    form, #dashboard {
+      background: #fff;
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      margin-top: 20px;
+      transition: transform 0.3s ease, background 0.3s ease;
+    }
+    form:hover, #dashboard:hover {
+      transform: translateY(-4px);
+      background: #f9fcff;
+    }
+    label {
+      font-weight: 600;
+      margin-top: 10px;
+      display: block;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 6px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
+    input:focus, select:focus {
+      border-color: #0078d7;
+      outline: none;
+      box-shadow: 0 0 8px rgba(0,120,215,0.3);
+    }
+    button {
+      background: linear-gradient(90deg, #16a085, #27ae60);
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+      margin-top: 12px;
+    }
+    button:hover {
+      background: linear-gradient(90deg, #13876c, #1f8b4c);
+      transform: scale(1.03);
+      box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      font-size: 14px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: center;
+    }
+    th {
+      background: #16a085;
+      color: #fff;
+    }
+    #refreshBtn {
+      width: auto;
+      display: inline-block;
+      margin-bottom: 10px;
+      background: linear-gradient(90deg, #2980b9, #3498db);
+    }
+    #refreshBtn:hover {
+      background: linear-gradient(90deg, #21618c, #2d89c5);
+    }
+    /* Row highlight colors */
+    .low { background-color: #e8f8f5; }      /* 1–2 times → green tint */
+    .medium { background-color: #fff3cd; }   /* 3–4 times → orange tint */
+    .high { background-color: #f8d7da; }     /* 5+ times → red tint */
+  </style>
+</head>
+<body>
+  <!-- Header with logo and title -->
+  <header>
+<h1>Chinmaya Vidyalaya,<br> Senior Secondary School,<br> Virugambakkam, Chennai-92.</h1>
+    <h2>Smart Late Arrival Management System (SLAMS)</h2>                    
+<img src="https://cvvlatemanagementsystem-hash.github.io/Chinmaya-Vidyalaya-Smart-Late-Arrival-Management-System-SLAMS-/Chinmaya%20Computing%20Club%20Logo%20(2).png" height=100 width=100 alt="Chinmaya Computing Club Logo">
+<h5>Powered by R Anand from Chinmaya Computing Club</h5>
+  </header>
+
+  <!-- Form -->
+  <h2 style="text-align:center;color:#2c3e50;">Late Entry Form</h2>
+  <form id="lateForm">
+    <label for="admissionNo">Admission No</label>
+    <input id="admissionNo" required />
+
+    <label for="time">Time</label>
+    <input id="time" type="time" required />
+
+    <label for="date">Date</label>
+    <input id="date" type="date" required />
+
+    <label for="reason">Reason</label>
+    <select id="reason" required>
+      <option value="">-- Select Reason --</option>
+      <option value="Traffic">Traffic</option>
+      <option value="Overslept">Overslept</option>
+      <option value="Transport Delay">Transport Delay</option>
+      <option value="Health Issue">Health Issue</option>
+      <option value="Other">Other</option>
+    </select>
+
+    <button type="submit" id="submitBtn">Submit</button>
+  </form>
+
+  <!-- Dashboard -->
+  <div id="dashboard">
+    <h2 style="text-align:center;color:#2c3e50;">Dashboard - Late Entries</h2>
+    <button id="refreshBtn" onclick="loadData()">🔄 Refresh Data</button>
+    <table id="dataTable">
+      <thead>
+        <tr>
+          <th>Admission No</th>
+          <th>Total Late Count</th>
+          <th>Date & Time</th>
+          <th>Reason</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <script>
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyELFMT5BnT9scM_UKDsQRMrkrJz_brJd0p3DkyLf90ycbpz9qKoEREqEFjI20eZTvTAQ/exec";
+
+    // Handle form submission
+    document.getElementById("lateForm").addEventListener("submit", async function(e){
+      e.preventDefault();
+      const submitBtn = document.getElementById("submitBtn");
+      submitBtn.disabled = true;
+
+      const payload = {
+        admissionNo: document.getElementById("admissionNo").value.trim(),
+        time: document.getElementById("time").value,
+        date: document.getElementById("date").value,
+        reason: document.getElementById("reason").value.trim()
+      };
+
+      try {
+        const res = await fetch(WEB_APP_URL, {
+          method: "POST",
+          body: JSON.stringify(payload)
+        });
+
+        const json = await res.json();
+        if (json && json.status === "success") {
+          alert("Submitted ✔");
+          document.getElementById("lateForm").reset();
+          autoFillDateTime();
+          loadData();
+        } else {
+          alert("Server response: " + (json && json.message ? json.message : JSON.stringify(json)));
+        }
+      } catch (err) {
+        alert("Error: " + err);
+      } finally {
+        submitBtn.disabled = false;
+      }
+    });
+
+    // Fetch data for dashboard
+async function loadData() {
+  try {
+    const res = await fetch(WEB_APP_URL);
+    const data = await res.json();
+
+    const tbody = document.querySelector("#dataTable tbody");
+    tbody.innerHTML = "";
+
+    if (data && data.length > 0) {
+      // Group by admissionNo
+      const grouped = {};
+      data.forEach(row => {
+        if (!grouped[row.admissionNo]) {
+          grouped[row.admissionNo] = {
+            admissionNo: row.admissionNo,
+            lateCount: row.lateCount,
+            dateTime: row.dateTime,
+            reason: row.reason
+          };
+        } else {
+          // Update with latest entry
+          grouped[row.admissionNo].lateCount = row.lateCount;
+          grouped[row.admissionNo].dateTime = row.dateTime;
+          grouped[row.admissionNo].reason = row.reason;
+        }
+      });
+
+      // Render grouped data
+      Object.values(grouped).forEach(row => {
+        const tr = document.createElement("tr");
+
+        // Apply highlight class
+        if (row.lateCount >= 5) {
+          tr.classList.add("high");
+        } else if (row.lateCount >= 3) {
+          tr.classList.add("medium");
+        } else if (row.lateCount >= 1) {
+          tr.classList.add("low");
+        }
+
+        tr.innerHTML = `
+          <td>${row.admissionNo}</td>
+          <td>${row.lateCount}</td>
+          <td>${row.dateTime}</td>
+          <td>${row.reason}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    } else {
+      tbody.innerHTML = "<tr><td colspan='4'>No records found</td></tr>";
+    }
+  } catch (err) {
+    alert("Error loading data: " + err);
+  }
+}
+
+           
+    // Auto-fill date & time fields
+    function autoFillDateTime() {
+      const now = new Date();
+      const dateStr = now.toISOString().split("T")[0];
+      document.getElementById("date").value = dateStr;
+      const timeStr = now.toTimeString().slice(0,5);
+      document.getElementById("time").value = timeStr;
+    }
+
+    // On page load
+    window.onload = function() {
+      autoFillDateTime();
+      loadData();
+    };
+  </script>
+</body>
+</html>

@@ -141,21 +141,10 @@
 
   <!-- Dashboard -->
   <div id="dashboard">
-    <h2 style="text-align:center;color:#2c3e50;">Dashboard - Late Entries</h2>
-    <button id="refreshBtn" onclick="loadData()">🔄 Refresh Data</button>
-    <table id="dataTable">
-      <thead>
-        <tr>
-          <th>Admission No</th>
-          <th>Total Late Count</th>
-          <th>Date & Time</th>
-          <th>Reason</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
-
+  <h2 style="text-align:center;color:#2c3e50;">Dashboard - Late Entries</h2>
+  <button id="refreshBtn" onclick="loadData()">🔄 Refresh Data</button>
+  <div id="dataTableContainer"></div> <!-- Dynamic tables appear here -->
+</div>
   <script>
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyELFMT5BnT9scM_UKDsQRMrkrJz_brJd0p3DkyLf90ycbpz9qKoEREqEFjI20eZTvTAQ/exec";
 
@@ -200,56 +189,65 @@ async function loadData() {
     const res = await fetch(WEB_APP_URL);
     const data = await res.json();
 
-    const tbody = document.querySelector("#dataTable tbody");
-    tbody.innerHTML = "";
+    const dashboard = document.getElementById("dashboard");
+    const tableContainer = document.querySelector("#dataTableContainer");
+    tableContainer.innerHTML = "";  // Clear previous content
 
     if (data && data.length > 0) {
       // Group by admissionNo
       const grouped = {};
       data.forEach(row => {
         if (!grouped[row.admissionNo]) {
-          grouped[row.admissionNo] = {
-            admissionNo: row.admissionNo,
-            lateCount: row.lateCount,
-            dateTime: row.dateTime,
-            reason: row.reason
-          };
-        } else {
-          // Update with latest entry
-          grouped[row.admissionNo].lateCount = row.lateCount;
-          grouped[row.admissionNo].dateTime = row.dateTime;
-          grouped[row.admissionNo].reason = row.reason;
+          grouped[row.admissionNo] = [];
         }
+        grouped[row.admissionNo].push({
+          dateTime: row.dateTime,
+          reason: row.reason
+        });
       });
 
       // Render grouped data
-      Object.values(grouped).forEach(row => {
-        const tr = document.createElement("tr");
+      Object.entries(grouped).forEach(([admissionNo, records]) => {
+        // Summary header
+        const header = document.createElement("h3");
+        header.textContent = `Admission No: ${admissionNo} — Total Late Count: ${records.length}`;
+        header.style.color = "#2c3e50";
+        header.style.marginTop = "20px";
+        tableContainer.appendChild(header);
 
-        // Apply highlight class
-        if (row.lateCount >= 5) {
-          tr.classList.add("high");
-        } else if (row.lateCount >= 3) {
-          tr.classList.add("medium");
-        } else if (row.lateCount >= 1) {
-          tr.classList.add("low");
-        }
-
-        tr.innerHTML = `
-          <td>${row.admissionNo}</td>
-          <td>${row.lateCount}</td>
-          <td>${row.dateTime}</td>
-          <td>${row.reason}</td>
+        // Create table
+        const table = document.createElement("table");
+        table.innerHTML = `
+          <thead>
+            <tr>
+              <th>Date & Time</th>
+              <th>Reason</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
         `;
-        tbody.appendChild(tr);
+
+        const tbody = table.querySelector("tbody");
+
+        records.forEach(record => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${record.dateTime}</td>
+            <td>${record.reason}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        tableContainer.appendChild(table);
       });
+
     } else {
-      tbody.innerHTML = "<tr><td colspan='4'>No records found</td></tr>";
+      tableContainer.innerHTML = "<p style='text-align:center;'>No records found</p>";
     }
   } catch (err) {
     alert("Error loading data: " + err);
   }
-}
+}    
 
            
     // Auto-fill date & time fields

@@ -184,17 +184,29 @@
     });
 
     // Fetch data for dashboard
+function formatDateTime(dateTimeStr) {
+  const dt = new Date(dateTimeStr);
+  const options = {
+    weekday: "long",
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+    hour12: true
+  };
+  return dt.toLocaleString('en-IN', options);
+}
+
 async function loadData() {
   try {
     const res = await fetch(WEB_APP_URL);
     const data = await res.json();
 
-    const dashboard = document.getElementById("dashboard");
     const tableContainer = document.querySelector("#dataTableContainer");
-    tableContainer.innerHTML = "";  // Clear previous content
+    tableContainer.innerHTML = "";  // Clear previous data
 
     if (data && data.length > 0) {
-      // Group by admissionNo
       const grouped = {};
       data.forEach(row => {
         if (!grouped[row.admissionNo]) {
@@ -206,16 +218,13 @@ async function loadData() {
         });
       });
 
-      // Render grouped data
       Object.entries(grouped).forEach(([admissionNo, records]) => {
-        // Summary header
         const header = document.createElement("h3");
         header.textContent = `Admission No: ${admissionNo} — Total Late Count: ${records.length}`;
         header.style.color = "#2c3e50";
         header.style.marginTop = "20px";
         tableContainer.appendChild(header);
 
-        // Create table
         const table = document.createElement("table");
         table.innerHTML = `
           <thead>
@@ -230,9 +239,10 @@ async function loadData() {
         const tbody = table.querySelector("tbody");
 
         records.forEach(record => {
+          const formattedDateTime = formatDateTime(record.dateTime);
           const tr = document.createElement("tr");
           tr.innerHTML = `
-            <td>${record.dateTime}</td>
+            <td>${formattedDateTime}</td>
             <td>${record.reason}</td>
           `;
           tbody.appendChild(tr);
@@ -240,7 +250,6 @@ async function loadData() {
 
         tableContainer.appendChild(table);
       });
-
     } else {
       tableContainer.innerHTML = "<p style='text-align:center;'>No records found</p>";
     }

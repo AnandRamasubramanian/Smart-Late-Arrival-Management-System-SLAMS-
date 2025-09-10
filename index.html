@@ -8,40 +8,33 @@
     body {
       font-family: "Segoe UI", Arial, sans-serif;
       padding: 20px;
-      max-width: 1000px;
+      max-width: 900px;
       margin: 0 auto;
-      background: linear-gradient(135deg, #fdfbfb, #ebedee);
+      background: linear-gradient(135deg, #f0f4ff, #dbe6f6);
     }
-    header {
+    h1 {
       text-align: center;
-      margin-bottom: 20px;
-    }
-    header img {
-      max-width: 150px;
-      display: block;
-      margin: 0 auto 10px;
-    }
-    header h1 {
-      font-size: 28px;
+      font-size: 32px;
       color: #2c3e50;
-      margin: 5px 0;
     }
-    header h2 {
-      font-size: 20px;
-      color: #16a085;
-      margin: 0;
+    h2 {
+      margin-top: 20px;
+      color: #2c3e50;
+      text-align: center;
     }
-    form, #dashboard {
+    a {
+      display: block;
+      margin-top: 10px;
+      color: #0078d7;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+    form, #dashboard, #lateComersSection {
       background: #fff;
       padding: 20px;
       border-radius: 16px;
       box-shadow: 0 8px 20px rgba(0,0,0,0.1);
       margin-top: 20px;
-      transition: transform 0.3s ease, background 0.3s ease;
-    }
-    form:hover, #dashboard:hover {
-      transform: translateY(-4px);
-      background: #f9fcff;
     }
     label {
       font-weight: 600;
@@ -55,15 +48,9 @@
       border-radius: 8px;
       border: 1px solid #ccc;
       font-size: 14px;
-      transition: all 0.3s ease;
-    }
-    input:focus, select:focus {
-      border-color: #0078d7;
-      outline: none;
-      box-shadow: 0 0 8px rgba(0,120,215,0.3);
     }
     button {
-      background: linear-gradient(90deg, #16a085, #27ae60);
+      background: #0078d7;
       color: #fff;
       border: none;
       cursor: pointer;
@@ -71,9 +58,7 @@
       margin-top: 12px;
     }
     button:hover {
-      background: linear-gradient(90deg, #13876c, #1f8b4c);
-      transform: scale(1.03);
-      box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+      background: #005a9e;
     }
     table {
       width: 100%;
@@ -87,22 +72,8 @@
       text-align: center;
     }
     th {
-      background: #16a085;
-      color: #fff;
+      background: #f4f4f4;
     }
-    #refreshBtn {
-      width: auto;
-      display: inline-block;
-      margin-bottom: 10px;
-      background: linear-gradient(90deg, #2980b9, #3498db);
-    }
-    #refreshBtn:hover {
-      background: linear-gradient(90deg, #21618c, #2d89c5);
-    }
-    /* Row highlight colors */
-    .low { background-color: #e8f8f5; }      /* 1–2 times → green tint */
-    .medium { background-color: #fff3cd; }   /* 3–4 times → orange tint */
-    .high { background-color: #f8d7da; }     /* 5+ times → red tint */
   </style>
 </head>
 <body>
@@ -110,16 +81,26 @@
   <header>
 <h1>Chinmaya Vidyalaya<br> Senior Secondary School<br> </h1>
     <h3>Virugambakkam, Chennai-92.<h3>
-    <h2>Smart Late Arrival Management System (SLAMS)</h2>                    
-  </header>
+    <h2>Smart Late Arrival Management System (SLAMS)</h2></header>
+<!-- Form -->
+  <h2>Late Entry Form</h2>
+  <a onclick="showLateComersForm()">📋 View Late Comers List</a>
 
-  <!-- Form -->
-  <h2 style="text-align:center;color:#2c3e50;">Late Entry Form</h2>
-      <h2>Late Entry Form</h2>
-<a href="#" onclick="showLateComersForm()" style="display:block; margin-top:10px; color:#0078d7; cursor:pointer;">📋 View Late Comers List</a>
   <form id="lateForm">
     <label for="admissionNo">Admission No</label>
     <input id="admissionNo" required />
+
+    <label for="name">Name</label>
+    <input id="name" required />
+
+    <label for="class">Class</label>
+    <input id="class" placeholder="e.g., 1A" required />
+
+    <label for="section">Section</label>
+    <input id="section" required />
+
+    <label for="rollNo">Roll No</label>
+    <input id="rollNo" required />
 
     <label for="time">Time</label>
     <input id="time" type="time" required />
@@ -140,19 +121,40 @@
     <button type="submit" id="submitBtn">Submit</button>
   </form>
 
-  <!-- Dashboard -->
   <div id="dashboard">
-  <h2 style="text-align:center;color:#2c3e50;">Dashboard - Late Entries</h2>
-  <button id="refreshBtn" onclick="loadData()">🔄 Refresh Data</button>
-  <div id="dataTableContainer"></div> <!-- Dynamic tables appear here -->
-</div>
-  <script>
-    function showLateComersForm() {
-  document.getElementById("lateComersSection").style.display = "block";
-}
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz5HH8c-ZtLyG7GcDRSoqP8_87T6lFOFPyOSIL0IH8A2TMnvKrZwRGlAsKAAmrKQb9vcw/exec";
+    <h2>Dashboard - Late Entries</h2>
+    <button onclick="loadData()">🔄 Refresh Data</button>
+    <div id="dataTableContainer"></div>
+  </div>
 
-    // Handle form submission
+  <div id="lateComersSection" style="display:none;">
+    <h2>Late Comers List</h2>
+    <label for="filterDate">Select Date</label>
+    <input type="date" id="filterDate" required />
+
+    <label for="filterClass">Select Class (optional)</label>
+    <input type="text" id="filterClass" placeholder="e.g., 1A" />
+
+    <button onclick="fetchLateComers()">Show List</button>
+    <div id="lateComersList"></div>
+  </div>
+  <script>
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz5HH8c-ZtLyG7GcDRSoqP8_87T6lFOFPyOSIL0IH8A2TMnvKrZwRGlAsKAAmrKQb9vcw/exec";
+function autoFillDateTime() {
+      const now = new Date();
+      document.getElementById("date").value = now.toISOString().split("T")[0];
+      document.getElementById("time").value = now.toTimeString().slice(0,5);
+    }
+
+    function showLateComersForm() {
+      document.getElementById("lateComersSection").style.display = "block";
+    }
+
+    function formatDateTime(dateTimeStr) {
+      const dt = new Date(dateTimeStr);
+      return dt.toLocaleString('en-IN', { weekday:"long", year:"numeric", month:"short", day:"numeric", hour:"numeric", minute:"numeric", hour12:true });
+    }
+
     document.getElementById("lateForm").addEventListener("submit", async function(e){
       e.preventDefault();
       const submitBtn = document.getElementById("submitBtn");
@@ -160,6 +162,10 @@
 
       const payload = {
         admissionNo: document.getElementById("admissionNo").value.trim(),
+        name: document.getElementById("name").value.trim(),
+        class: document.getElementById("class").value.trim(),
+        section: document.getElementById("section").value.trim(),
+        rollNo: document.getElementById("rollNo").value.trim(),
         time: document.getElementById("time").value,
         date: document.getElementById("date").value,
         reason: document.getElementById("reason").value.trim()
@@ -170,15 +176,15 @@
           method: "POST",
           body: JSON.stringify(payload)
         });
-
         const json = await res.json();
-        if (json && json.status === "success") {
+
+        if (json.status === "success") {
           alert("Submitted ✔");
           document.getElementById("lateForm").reset();
           autoFillDateTime();
           loadData();
         } else {
-          alert("Server response: " + (json && json.message ? json.message : JSON.stringify(json)));
+          alert("Server error: " + json.message);
         }
       } catch (err) {
         alert("Error: " + err);
@@ -187,180 +193,102 @@
       }
     });
 
-    // Fetch data for dashboard
-function formatDateTime(dateTimeStr) {
-  const dt = new Date(dateTimeStr);
-  const options = {
-    weekday: "long",
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "numeric",
-    hour12: true
-  };
-  return dt.toLocaleString('en-IN', options);
-}
+    async function loadData() {
+      try {
+        const res = await fetch(WEB_APP_URL);
+        const data = await res.json();
+        const container = document.getElementById("dataTableContainer");
+        container.innerHTML = "";
 
-async function loadData() {
-  try {
-    const res = await fetch(WEB_APP_URL);
-    const data = await res.json();
+        if (data.length > 0) {
+          const grouped = {};
+          data.forEach(row => {
+            if (!grouped[row.admissionNo]) grouped[row.admissionNo] = [];
+            grouped[row.admissionNo].push({
+              dateTime: row.dateTime,
+              reason: row.reason
+            });
+          });
 
-    const tableContainer = document.querySelector("#dataTableContainer");
-    tableContainer.innerHTML = "";  // Clear previous data
+          Object.entries(grouped).forEach(([admissionNo, records]) => {
+            const header = document.createElement("h3");
+            header.textContent = `Admission No: ${admissionNo} — Total Late Count: ${records.length}`;
+            container.appendChild(header);
 
-    if (data && data.length > 0) {
-      const grouped = {};
-      data.forEach(row => {
-        if (!grouped[row.admissionNo]) {
-          grouped[row.admissionNo] = [];
+            const table = document.createElement("table");
+            table.innerHTML = `<thead><tr><th>Date & Time</th><th>Reason</th></tr><tbody></tbody></thead>`;
+            const tbody = table.querySelector("tbody");
+
+            records.forEach(r => {
+              const tr = document.createElement("tr");
+              tr.innerHTML = `<td>${formatDateTime(r.dateTime)}</td><td>${r.reason}</td>`;
+              tbody.appendChild(tr);
+            });
+
+            container.appendChild(table);
+          });
+        } else {
+          container.innerHTML = "<p>No records found</p>";
         }
-        grouped[row.admissionNo].push({
-          dateTime: row.dateTime,
-          reason: row.reason
-        });
-      });
-
-      Object.entries(grouped).forEach(([admissionNo, records]) => {
-        const header = document.createElement("h3");
-        header.textContent = `Admission No: ${admissionNo} — Total Late Count: ${records.length}`;
-        header.style.color = "#2c3e50";
-        header.style.marginTop = "20px";
-        tableContainer.appendChild(header);
-
-        const table = document.createElement("table");
-        table.innerHTML = `
-          <thead>
-            <tr>
-              <th>Date & Time</th>
-              <th>Reason</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        `;
-
-        const tbody = table.querySelector("tbody");
-
-        records.forEach(record => {
-          const formattedDateTime = formatDateTime(record.dateTime);
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${formattedDateTime}</td>
-            <td>${record.reason}</td>
-          `;
-          tbody.appendChild(tr);
-        });
-
-        tableContainer.appendChild(table);
-      });
-    } else {
-      tableContainer.innerHTML = "<p style='text-align:center;'>No records found</p>";
+      } catch (err) {
+        alert("Error: " + err);
+      }
     }
-  } catch (err) {
-    alert("Error loading data: " + err);
-  }
-}    
+
     async function fetchLateComers() {
-  const filterDate = document.getElementById("filterDate").value;
-  const filterClass = document.getElementById("filterClass").value.trim();
+      const filterDate = document.getElementById("filterDate").value;
+      const filterClass = document.getElementById("filterClass").value.trim();
 
-  if (!filterDate) {
-    alert("Please select a date.");
-    return;
-  }
+      if (!filterDate) {
+        alert("Please select a date.");
+        return;
+      }
 
-  try {
-    const res = await fetch(`${WEB_APP_URL}?action=lateComers&date=${filterDate}&class=${encodeURIComponent(filterClass)}`);
-    const data = await res.json();
+      try {
+        const res = await fetch(`${WEB_APP_URL}?action=lateComers&date=${filterDate}&class=${encodeURIComponent(filterClass)}`);
+        const data = await res.json();
+        const container = document.getElementById("lateComersList");
+        container.innerHTML = "";
 
-    const container = document.getElementById("lateComersList");
-    container.innerHTML = "";
+        if (data.length > 0) {
+          const table = document.createElement("table");
+          table.innerHTML = `
+            <thead><tr><th>Name</th><th>Class</th><th>Section</th><th>Roll No</th><th>Admission No</th><th>Reason</th></tr></thead>
+            <tbody></tbody>
+          `;
+          const tbody = table.querySelector("tbody");
 
-    if (data.length > 0) {
-      const table = document.createElement("table");
-      table.innerHTML = `
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Class</th>
-            <th>Section</th>
-            <th>Roll No</th>
-            <th>Admission No</th>
-            <th>Reason</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      `;
+          data.forEach(row => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${row.name}</td>
+              <td>${row.class}</td>
+              <td>${row.section}</td>
+              <td>${row.rollNo}</td>
+              <td>${row.admissionNo}</td>
+              <td>${row.reason}</td>
+            `;
+            tbody.appendChild(tr);
+          });
 
-      const tbody = table.querySelector("tbody");
-
-      data.forEach(row => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${row.name}</td>
-          <td>${row.class}</td>
-          <td>${row.section}</td>
-          <td>${row.rollNo}</td>
-          <td>${row.admissionNo}</td>
-          <td>${row.reason}</td>
-        `;
-        tbody.appendChild(tr);
-      });
-
-      container.appendChild(table);
-    } else {
-      container.innerHTML = "<p>No late comers found for this date.</p>";
+          container.appendChild(table);
+        } else {
+          container.innerHTML = "<p>No late comers found for this date.</p>";
+        }
+      } catch (err) {
+        alert("Error: " + err);
+      }
     }
 
-  } catch (err) {
-    alert("Error fetching data: " + err);
-  }
-}
-    // Auto-fill date & time fields
-    function autoFillDateTime() {
-      const now = new Date();
-      const dateStr = now.toISOString().split("T")[0];
-      document.getElementById("date").value = dateStr;
-      const timeStr = now.toTimeString().slice(0,5);
-      document.getElementById("time").value = timeStr;
-    }
-
-    // On page load
     window.onload = function() {
       autoFillDateTime();
       loadData();
     };
-    function formatDateTime(dateTimeStr) {
-  const dt = new Date(dateTimeStr);
-  const options = {
-    weekday: "long",
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "numeric",
-    hour12: true
-  };
-  return dt.toLocaleString('en-IN', options);
-}
-  </script>
-      <div id="lateComersSection" style="display:none; margin-top:20px; background:#fff; padding:20px; border-radius:16px; box-shadow:0 8px 20px rgba(0,0,0,0.1);">
-  <h2>Late Comers List</h2>
-  <label for="filterDate">Select Date</label>
-  <input type="date" id="filterDate" required />
-
-  <label for="filterClass">Select Class (optional)</label>
-  <input type="text" id="filterClass" placeholder="e.g., 1A" />
-
-  <button onclick="fetchLateComers()">Show List</button>
-
-  <div id="lateComersList" style="margin-top:20px;"></div>
-</div>
+  <header>
   <img src="https://cvvlatemanagementsystem-hash.github.io/Chinmaya-Vidyalaya-Smart-Late-Arrival-Management-System-SLAMS-/Chinmaya%20Computing%20Club%20Logo%20(2).png" height=100 width=100 alt="Chinmaya Computing Club Logo">
 <h5>Powered by R Anand from Chinmaya Computing Club</h5><br>
 <h5>Developed by R Anand</h5> <br>
       <h5>Mentored by Aishwarya Bramma</h5> <br>
-      <h5>Guided by Principal Elavarasi Mam</h5> <br>
+      <h5>Guided by Principal Elavarasi Mam</h5></header>
 </body>
 </html>

@@ -115,6 +115,8 @@
 
   <!-- Form -->
   <h2 style="text-align:center;color:#2c3e50;">Late Entry Form</h2>
+      <h2>Late Entry Form</h2>
+<a href="#" onclick="showLateComersForm()" style="display:block; margin-top:10px; color:#0078d7; cursor:pointer;">📋 View Late Comers List</a>
   <form id="lateForm">
     <label for="admissionNo">Admission No</label>
     <input id="admissionNo" required />
@@ -145,7 +147,10 @@
   <div id="dataTableContainer"></div> <!-- Dynamic tables appear here -->
 </div>
   <script>
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzyyWrLvltF1OSILK7YlfeQEWTbDD1zL8aQf9-jr1N0BqQkMZQG1qDm3ByQj7hM2aB8Ww/exec";
+    function showLateComersForm() {
+  document.getElementById("lateComersSection").style.display = "block";
+}
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz5HH8c-ZtLyG7GcDRSoqP8_87T6lFOFPyOSIL0IH8A2TMnvKrZwRGlAsKAAmrKQb9vcw/exec";
 
     // Handle form submission
     document.getElementById("lateForm").addEventListener("submit", async function(e){
@@ -256,8 +261,62 @@ async function loadData() {
     alert("Error loading data: " + err);
   }
 }    
+    async function fetchLateComers() {
+  const filterDate = document.getElementById("filterDate").value;
+  const filterClass = document.getElementById("filterClass").value.trim();
 
-           
+  if (!filterDate) {
+    alert("Please select a date.");
+    return;
+  }
+
+  try {
+    const res = await fetch(`${WEB_APP_URL}?action=lateComers&date=${filterDate}&class=${encodeURIComponent(filterClass)}`);
+    const data = await res.json();
+
+    const container = document.getElementById("lateComersList");
+    container.innerHTML = "";
+
+    if (data.length > 0) {
+      const table = document.createElement("table");
+      table.innerHTML = `
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Class</th>
+            <th>Section</th>
+            <th>Roll No</th>
+            <th>Admission No</th>
+            <th>Reason</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      `;
+
+      const tbody = table.querySelector("tbody");
+
+      data.forEach(row => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${row.name}</td>
+          <td>${row.class}</td>
+          <td>${row.section}</td>
+          <td>${row.rollNo}</td>
+          <td>${row.admissionNo}</td>
+          <td>${row.reason}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      container.appendChild(table);
+    } else {
+      container.innerHTML = "<p>No late comers found for this date.</p>";
+    }
+
+  } catch (err) {
+    alert("Error fetching data: " + err);
+  }
+}
     // Auto-fill date & time fields
     function autoFillDateTime() {
       const now = new Date();
@@ -272,7 +331,32 @@ async function loadData() {
       autoFillDateTime();
       loadData();
     };
+    function formatDateTime(dateTimeStr) {
+  const dt = new Date(dateTimeStr);
+  const options = {
+    weekday: "long",
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+    hour12: true
+  };
+  return dt.toLocaleString('en-IN', options);
+}
   </script>
+      <div id="lateComersSection" style="display:none; margin-top:20px; background:#fff; padding:20px; border-radius:16px; box-shadow:0 8px 20px rgba(0,0,0,0.1);">
+  <h2>Late Comers List</h2>
+  <label for="filterDate">Select Date</label>
+  <input type="date" id="filterDate" required />
+
+  <label for="filterClass">Select Class (optional)</label>
+  <input type="text" id="filterClass" placeholder="e.g., 1A" />
+
+  <button onclick="fetchLateComers()">Show List</button>
+
+  <div id="lateComersList" style="margin-top:20px;"></div>
+</div>
   <img src="https://cvvlatemanagementsystem-hash.github.io/Chinmaya-Vidyalaya-Smart-Late-Arrival-Management-System-SLAMS-/Chinmaya%20Computing%20Club%20Logo%20(2).png" height=100 width=100 alt="Chinmaya Computing Club Logo">
 <h5>Powered by R Anand from Chinmaya Computing Club</h5><br>
 <h5>Developed by R Anand</h5> <br>

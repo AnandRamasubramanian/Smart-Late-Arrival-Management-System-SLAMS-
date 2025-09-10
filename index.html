@@ -1,294 +1,397 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>SLAMS - Late Entry System</title>
+  <title>SLAMS — Late Entry v1</title>
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
   <style>
-    body {
-      font-family: "Segoe UI", Arial, sans-serif;
-      padding: 20px;
-      max-width: 900px;
-      margin: 0 auto;
-      background: linear-gradient(135deg, #f0f4ff, #dbe6f6);
+    /* Windows-12-like subtle glass + soft shadow */
+    .glass {
+      background: linear-gradient(180deg, rgba(255,255,255,0.55), rgba(255,255,255,0.25));
+      backdrop-filter: blur(6px) saturate(120%);
+      -webkit-backdrop-filter: blur(6px) saturate(120%);
+      border: 1px solid rgba(255,255,255,0.15);
+      box-shadow: 0 6px 18px rgba(16,24,40,0.08);
+      border-radius: 12px;
     }
-    h1 {
-      text-align: center;
-      font-size: 32px;
-      color: #2c3e50;
+    /* Hover animations for buttons */
+    .btn-anim {
+      transition: transform .18s ease, box-shadow .18s ease;
     }
-    h2 {
-      margin-top: 20px;
-      color: #2c3e50;
-      text-align: center;
+    .btn-anim:hover {
+      transform: translateY(-4px) scale(1.02);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.12);
     }
-    a {
-      display: block;
-      margin-top: 10px;
-      color: #0078d7;
-      cursor: pointer;
-      text-decoration: underline;
-    }
-    form, #dashboard, #lateComersSection {
-      background: #fff;
-      padding: 20px;
-      border-radius: 16px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-      margin-top: 20px;
-    }
-    label {
-      font-weight: 600;
-      margin-top: 10px;
-      display: block;
-    }
-    input, select, button {
-      width: 100%;
-      padding: 10px;
-      margin-top: 6px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      font-size: 14px;
-    }
-    button {
-      background: #0078d7;
-      color: #fff;
-      border: none;
-      cursor: pointer;
-      font-weight: bold;
-      margin-top: 12px;
-    }
-    button:hover {
-      background: #005a9e;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-      font-size: 14px;
-    }
-    th, td {
-      border: 1px solid #ccc;
-      padding: 8px;
-      text-align: center;
-    }
-    th {
-      background: #f4f4f4;
+    /* small accordion animation */
+    .accordion-enter { max-height: 0; transition: max-height .28s ease; overflow: hidden; }
+    .accordion-open { max-height: 1000px; transition: max-height .4s ease; overflow: visible; }
+    /* Toast */
+    #toast {
+      transition: opacity .25s ease, transform .25s ease;
     }
   </style>
 </head>
-<body>
-  <!-- Header with logo and title -->
-  <header>
+<body class="bg-gradient-to-b from-sky-50 to-indigo-50 min-h-screen p-6">
+<header>
 <h1>Chinmaya Vidyalaya<br> Senior Secondary School<br> </h1>
     <h3>Virugambakkam, Chennai-92.<h3>
-    <h2>Smart Late Arrival Management System (SLAMS)</h2></header>
-<!-- Form -->
-  <h2>Late Entry Form</h2>
-  <a onclick="showLateComersForm()">📋 View Late Comers List</a>
+    <h2>Smart Late Arrival Management System (SLAMS)</h2>
+</header>
+  <div class="max-w-6xl mx-auto space-y-6">
+    <header class="flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl font-semibold">SLAMS (Version 1)</h1>
+        <p class="text-sm text-gray-600">Instant logging to Google Sheets</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <a id="lateListLink" href="#" class="text-sm underline text-indigo-600 hover:text-indigo-800">LateComers List</a>
+      </div>
+    </header>
 
-  <form id="lateForm">
-    <label for="admissionNo">Admission No</label>
-    <input id="admissionNo" required />
+    <main class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Form -->
+      <section class="glass p-6">
+        <h2 class="text-xl font-medium mb-4">Late Entry Form</h2>
+        <form id="lateForm" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium mb-1">Admission No</label>
+            <input id="admissionNo" required class="w-full p-3 rounded-lg border-gray-200 border focus:outline-none" placeholder="Enter admission number" />
+          </div>
 
-    <label for="name">Name</label>
-    <input id="name" required />
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium mb-1">Date</label>
+              <input id="dateDisplay" disabled class="w-full p-3 rounded-lg border-gray-200 border bg-white/60" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1">Time</label>
+              <input id="timeDisplay" disabled class="w-full p-3 rounded-lg border-gray-200 border bg-white/60" />
+            </div>
+          </div>
 
-    <label for="class">Class</label>
-    <input id="class" placeholder="e.g., 1A" required />
+          <div>
+            <label class="block text-sm font-medium mb-1">Reason</label>
+            <select id="reason" class="w-full p-3 rounded-lg border-gray-200 border" required>
+              <option value="">Select reason</option>
+              <option>Traffic</option>
+              <option>Missed transport</option>
+              <option>Medical</option>
+              <option>Family reason</option>
+              <option>Other</option>
+            </select>
+          </div>
 
-    <label for="section">Section</label>
-    <input id="section" required />
+          <div class="flex items-center gap-3">
+            <button id="submitBtn" type="submit" class="btn-anim bg-indigo-600 text-white px-5 py-3 rounded-lg shadow-sm">Submit</button>
+            <button id="clearBtn" type="button" class="btn-anim bg-gray-100 px-4 py-3 rounded-lg">Clear</button>
+            <div id="countBadge" class="ml-auto text-sm text-gray-700"></div>
+          </div>
+        </form>
 
-    <label for="rollNo">Roll No</label>
-    <input id="rollNo" required />
+        <p class="mt-4 text-sm text-gray-600">When you submit, the Dashboard updates instantly and shows total late counts per admission number with detailed entries below.</p>
+      </section>
 
-    <label for="time">Time</label>
-    <input id="time" type="time" required />
+      <!-- Dashboard -->
+      <section class="glass p-6">
+        <div class="flex items-start justify-between">
+          <div>
+            <h2 class="text-xl font-medium">Dashboard</h2>
+            <p class="text-sm text-gray-600">Unique students with late counts. Click an admission to expand details.</p>
+          </div>
+          <div>
+            <button id="refreshBtn" class="btn-anim bg-emerald-500 text-white px-4 py-2 rounded-lg">Refresh</button>
+          </div>
+        </div>
 
-    <label for="date">Date</label>
-    <input id="date" type="date" required />
-
-    <label for="reason">Reason</label>
-    <select id="reason" required>
-      <option value="">-- Select Reason --</option>
-      <option value="Traffic">Traffic</option>
-      <option value="Overslept">Overslept</option>
-      <option value="Transport Delay">Transport Delay</option>
-      <option value="Health Issue">Health Issue</option>
-      <option value="Other">Other</option>
-    </select>
-
-    <button type="submit" id="submitBtn">Submit</button>
-  </form>
-
-  <div id="dashboard">
-    <h2>Dashboard - Late Entries</h2>
-    <button onclick="loadData()">🔄 Refresh Data</button>
-    <div id="dataTableContainer"></div>
+        <div id="dashboardArea" class="mt-4 space-y-3">
+          <!-- Dynamic content -->
+        </div>
+      </section>
+    </main>
   </div>
 
-  <div id="lateComersSection" style="display:none;">
-    <h2>Late Comers List</h2>
-    <label for="filterDate">Select Date</label>
-    <input type="date" id="filterDate" required />
-
-    <label for="filterClass">Select Class (optional)</label>
-    <input type="text" id="filterClass" placeholder="e.g., 1A" />
-
-    <button onclick="fetchLateComers()">Show List</button>
-    <div id="lateComersList"></div>
+  <!-- Toast -->
+  <div id="toast" class="fixed right-6 bottom-6 bg-white/95 p-4 rounded-lg shadow-md hidden">
+    <div id="toastMsg" class="text-sm"></div>
   </div>
+
+  <!-- LateComers Modal -->
+  <div id="lateModal" class="fixed inset-0 z-40 hidden items-center justify-center bg-black/40 p-4">
+    <div class="w-full max-w-2xl glass p-6">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-medium">LateComers List — Choose Date</h3>
+        <button id="closeModal" class="text-gray-600">Close ✕</button>
+      </div>
+
+      <div class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <input id="filterDate" type="date" class="p-3 rounded-lg border" />
+        <select id="filterClass" class="p-3 rounded-lg border">
+          <option value="">All classes (not stored in v1)</option>
+          <!-- In v2 we'll use actual class filter -->
+        </select>
+        <button id="showListBtn" class="btn-anim bg-indigo-600 text-white px-4 py-3 rounded-lg">Show List</button>
+      </div>
+
+      <div id="lateListResults" class="mt-4 max-h-64 overflow-auto"></div>
+    </div>
+  </div>
+
   <script>
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwSCZ3f8gt5cKq4dwg3vedSTMEM5KR1GKst_dz9sY9ri9IhR8EB1kJarqZWkt-8_rx9WA/exec";
-function autoFillDateTime() {
-      const now = new Date();
-      document.getElementById("date").value = now.toISOString().split("T")[0];
-      document.getElementById("time").value = now.toTimeString().slice(0,5);
+    // ======== CONFIG ========
+    // Replace with your deployed Apps Script Web App URL
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwzQQ2K3sz5GdcPhMxtZOHrc0clvJrgI2GabjE_npBHPuAd_ojOPzlwlRcoo6b8nUA_vg/exec';
+
+    // Utility to format date/time client-side (friendly)
+    function getFriendlyDateTime() {
+      const d = new Date();
+      // Day short name
+      const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+      const dayName = dayNames[d.getDay()];
+      // Date parts
+      const day = String(d.getDate()).padStart(2,'0');
+      const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      const month = monthNames[d.getMonth()];
+      const year = d.getFullYear();
+
+      // time 12-hour
+      let hours = d.getHours();
+      const minutes = String(d.getMinutes()).padStart(2,'0');
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12 || 12;
+      const timeStr = `${String(hours).padStart(2,'0')}:${minutes} ${ampm}`;
+
+      const dateStr = `${dayName}, ${day} ${month} ${year}`;
+      return { dateStr, timeStr, isoDate: d.toISOString().split('T')[0] };
     }
 
-    function showLateComersForm() {
-      document.getElementById("lateComersSection").style.display = "block";
+    // Auto-fill date/time inputs
+    function fillDateTime() {
+      const { dateStr, timeStr } = getFriendlyDateTime();
+      document.getElementById('dateDisplay').value = dateStr;
+      document.getElementById('timeDisplay').value = timeStr;
+      // also set the hidden date input for late list modal default if empty
+      const todayIso = getFriendlyDateTime().isoDate;
+      if (!document.getElementById('filterDate').value) document.getElementById('filterDate').value = todayIso;
     }
 
-    function formatDateTime(dateTimeStr) {
-      const dt = new Date(dateTimeStr);
-      return dt.toLocaleString('en-IN', { weekday:"long", year:"numeric", month:"short", day:"numeric", hour:"numeric", minute:"numeric", hour12:true });
+    // Show toast
+    function showToast(msg, duration=2500) {
+      const t = document.getElementById('toast');
+      document.getElementById('toastMsg').textContent = msg;
+      t.classList.remove('hidden');
+      t.style.opacity = '1';
+      t.style.transform = 'translateY(0)';
+      setTimeout(() => {
+        t.style.opacity = '0';
+        t.style.transform = 'translateY(6px)';
+        setTimeout(()=> t.classList.add('hidden'), 250);
+      }, duration);
     }
 
-    document.getElementById("lateForm").addEventListener("submit", async function(e){
+    // Submit form
+    document.getElementById('lateForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const submitBtn = document.getElementById("submitBtn");
-      submitBtn.disabled = true;
+      const admissionNo = document.getElementById('admissionNo').value.trim();
+      const reason = document.getElementById('reason').value;
+      if (!admissionNo || !reason) { showToast('Please fill Admission No and Reason.'); return; }
+      // client-side date/time (for display) but server will stamp its own time as source of truth
+      const dateDisplay = document.getElementById('dateDisplay').value;
+      const timeDisplay = document.getElementById('timeDisplay').value;
+
+      // friendly confirmation popup (custom)
+      if (!confirm(`Confirm late entry:\n\nAdmission No: ${admissionNo}\nDate: ${dateDisplay}\nTime: ${timeDisplay}\nReason: ${reason}`)) return;
 
       const payload = {
-        admissionNo: document.getElementById("admissionNo").value.trim(),
-        name: document.getElementById("name").value.trim(),
-        class: document.getElementById("class").value.trim(),
-        section: document.getElementById("section").value.trim(),
-        rollNo: document.getElementById("rollNo").value.trim(),
-        time: document.getElementById("time").value,
-        date: document.getElementById("date").value,
-        reason: document.getElementById("reason").value.trim()
+        admissionNo,
+        clientDate: dateDisplay,
+        clientTime: timeDisplay,
+        reason
       };
 
       try {
-        const res = await fetch(WEB_APP_URL, {
-          method: "POST",
+        const res = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
-        const json = await res.json();
-
-        if (json.status === "success") {
-          alert("Submitted ✔");
-          document.getElementById("lateForm").reset();
-          autoFillDateTime();
-          loadData();
+        const data = await res.json();
+        if (data && data.success) {
+          showToast('Saved ✔️');
+          document.getElementById('admissionNo').value = '';
+          document.getElementById('reason').selectedIndex = 0;
+          // update count badge
+          document.getElementById('countBadge').textContent = `Total late for ${data.admissionNo}: ${data.lateCount}`;
+          // refresh dashboard
+          loadDashboard();
         } else {
-          alert("Server error: " + json.message);
+          showToast('Save failed. See console.');
+          console.error('Save failed', data);
         }
       } catch (err) {
-        alert("Error: " + err);
-      } finally {
-        submitBtn.disabled = false;
+        console.error(err);
+        showToast('Network error. Check console.');
       }
     });
 
-    async function loadData() {
+    document.getElementById('clearBtn').addEventListener('click', () => {
+      document.getElementById('admissionNo').value = '';
+      document.getElementById('reason').selectedIndex = 0;
+      fillDateTime();
+    });
+
+    document.getElementById('refreshBtn').addEventListener('click', loadDashboard);
+
+    // Dashboard loader -> calls Apps Script GET action=getSummary
+    async function loadDashboard() {
+      const url = `${SCRIPT_URL}?action=getSummary&_=${Date.now()}`;
       try {
-        const res = await fetch(WEB_APP_URL);
-        const data = await res.json();
-        const container = document.getElementById("dataTableContainer");
-        container.innerHTML = "";
-
-        if (data.length > 0) {
-          const grouped = {};
-          data.forEach(row => {
-            if (!grouped[row.admissionNo]) grouped[row.admissionNo] = [];
-            grouped[row.admissionNo].push({
-              dateTime: row.dateTime,
-              reason: row.reason
-            });
-          });
-
-          Object.entries(grouped).forEach(([admissionNo, records]) => {
-            const header = document.createElement("h3");
-            header.textContent = `Admission No: ${admissionNo} — Total Late Count: ${records.length}`;
-            container.appendChild(header);
-
-            const table = document.createElement("table");
-            table.innerHTML = `<thead><tr><th>Date & Time</th><th>Reason</th></tr><tbody></tbody></thead>`;
-            const tbody = table.querySelector("tbody");
-
-            records.forEach(r => {
-              const tr = document.createElement("tr");
-              tr.innerHTML = `<td>${formatDateTime(r.dateTime)}</td><td>${r.reason}</td>`;
-              tbody.appendChild(tr);
-            });
-
-            container.appendChild(table);
-          });
-        } else {
-          container.innerHTML = "<p>No records found</p>";
-        }
+        const res = await fetch(url);
+        const json = await res.json();
+        renderDashboard(json);
       } catch (err) {
-        alert("Error: " + err);
+        console.error(err);
+        document.getElementById('dashboardArea').innerHTML = '<div class="text-sm text-red-600">Unable to load dashboard</div>';
       }
     }
 
-    async function fetchLateComers() {
-      const filterDate = document.getElementById("filterDate").value;
-      const filterClass = document.getElementById("filterClass").value.trim();
+    // Render the dashboard
+    function renderDashboard(data) {
+      const container = document.getElementById('dashboardArea');
+      container.innerHTML = '';
 
-      if (!filterDate) {
-        alert("Please select a date.");
+      if (!data || !data.summary || data.summary.length === 0) {
+        container.innerHTML = '<div class="text-sm text-gray-600">No late entries yet.</div>';
         return;
       }
 
-      try {
-        const res = await fetch(`${WEB_APP_URL}?action=lateComers&date=${filterDate}&class=${encodeURIComponent(filterClass)}`);
-        const data = await res.json();
-        const container = document.getElementById("lateComersList");
-        container.innerHTML = "";
+      data.summary.forEach(item => {
+        // color code
+        let badgeColor = 'bg-emerald-200 text-emerald-800';
+        if (item.lateCount >= 3) badgeColor = 'bg-red-200 text-red-800';
+        else if (item.lateCount === 1) badgeColor = 'bg-green-200 text-green-800';
+        else badgeColor = 'bg-yellow-200 text-yellow-800';
 
-        if (data.length > 0) {
-          const table = document.createElement("table");
-          table.innerHTML = `
-            <thead><tr><th>Name</th><th>Class</th><th>Section</th><th>Roll No</th><th>Admission No</th><th>Reason</th></tr></thead>
-            <tbody></tbody>
-          `;
-          const tbody = table.querySelector("tbody");
+        const acc = document.createElement('div');
+        acc.className = 'p-3 rounded-lg border border-gray-100';
 
-          data.forEach(row => {
-            const tr = document.createElement("tr");
-            tr.innerHTML = `
-              <td>${row.name}</td>
-              <td>${row.class}</td>
-              <td>${row.section}</td>
-              <td>${row.rollNo}</td>
-              <td>${row.admissionNo}</td>
-              <td>${row.reason}</td>
-            `;
-            tbody.appendChild(tr);
-          });
+        acc.innerHTML = `
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="text-sm text-gray-600">Admission No</div>
+              <div class="text-lg font-medium">${item.admissionNo}</div>
+            </div>
+            <div class="text-right">
+              <div class="inline-block ${badgeColor} px-3 py-1 rounded-full text-sm font-semibold">Late: ${item.lateCount}</div>
+            </div>
+          </div>
+          <div class="mt-3">
+            <button class="toggleBtn btn-anim text-sm px-3 py-1 rounded-lg border">Show / Hide details</button>
+            <div class="details mt-3 accordion-enter">
+              <!-- entries will go here -->
+            </div>
+          </div>
+        `;
 
-          container.appendChild(table);
-        } else {
-          container.innerHTML = "<p>No late comers found for this date.</p>";
-        }
-      } catch (err) {
-        alert("Error: " + err);
-      }
+        container.appendChild(acc);
+
+        const toggle = acc.querySelector('.toggleBtn');
+        const details = acc.querySelector('.details');
+        let open = false;
+        toggle.addEventListener('click', () => {
+          open = !open;
+          if (open) {
+            details.classList.remove('accordion-enter');
+            details.classList.add('accordion-open');
+            populateEntries(details, item.entries);
+            toggle.textContent = 'Hide details';
+          } else {
+            details.classList.remove('accordion-open');
+            details.classList.add('accordion-enter');
+            toggle.textContent = 'Show details';
+          }
+        });
+      });
     }
 
-    window.onload = function() {
-      autoFillDateTime();
-      loadData();
-    };
-  <header>
+    function populateEntries(container, entries) {
+      container.innerHTML = '';
+      if (!entries || entries.length === 0) {
+        container.innerHTML = '<div class="text-sm text-gray-500">No records</div>';
+        return;
+      }
+      const table = document.createElement('div');
+      table.className = 'space-y-2';
+      entries.forEach(e => {
+        const row = document.createElement('div');
+        row.className = 'p-3 rounded-lg bg-white/80 border flex items-center justify-between';
+        row.innerHTML = `<div class="text-sm">${e.dateTime}</div><div class="text-sm text-gray-700">${e.reason}</div>`;
+        table.appendChild(row);
+      });
+      container.appendChild(table);
+    }
+
+    // LateComers modal handling (date pick)
+    document.getElementById('lateListLink').addEventListener('click', (ev) => {
+      ev.preventDefault();
+      document.getElementById('lateModal').classList.remove('hidden');
+      document.getElementById('lateModal').classList.add('flex');
+    });
+    document.getElementById('closeModal').addEventListener('click', () => {
+      document.getElementById('lateModal').classList.add('hidden');
+      document.getElementById('lateModal').classList.remove('flex');
+    });
+    document.getElementById('showListBtn').addEventListener('click', async () => {
+      const date = document.getElementById('filterDate').value;
+      if (!date) { showToast('Select a date'); return; }
+      const url = `${SCRIPT_URL}?action=getByDate&date=${encodeURIComponent(date)}&_=${Date.now()}`;
+      try {
+        const res = await fetch(url);
+        const json = await res.json();
+        renderLateListResults(json);
+      } catch (err) {
+        console.error(err);
+        showToast('Unable to fetch list');
+      }
+    });
+
+    function renderLateListResults(data) {
+      const place = document.getElementById('lateListResults');
+      place.innerHTML = '';
+      if (!data || !data.rows || data.rows.length === 0) {
+        place.innerHTML = '<div class="text-sm text-gray-600">No late comers found for the date.</div>';
+        return;
+      }
+      const list = document.createElement('div');
+      list.className = 'space-y-2';
+      data.rows.forEach(r => {
+        const card = document.createElement('div');
+        card.className = 'p-3 rounded-lg bg-white/80 border flex items-center justify-between';
+        card.innerHTML = `<div>
+          <div class="text-sm text-gray-600">Admission: <span class="font-medium">${r.admissionNo}</span></div>
+          <div class="text-sm">${r.dateTime}</div>
+        </div>
+        <div class="text-sm text-gray-700">${r.reason}</div>`;
+        list.appendChild(card);
+      });
+      place.appendChild(list);
+    }
+
+    // initial
+    fillDateTime();
+    loadDashboard();
+    // Refresh client-side time every 30s
+    setInterval(fillDateTime, 30000);
+  </script>
+<header>
   <img src="https://cvvlatemanagementsystem-hash.github.io/Chinmaya-Vidyalaya-Smart-Late-Arrival-Management-System-SLAMS-/Chinmaya%20Computing%20Club%20Logo%20(2).png" height=100 width=100 alt="Chinmaya Computing Club Logo">
 <h5>Powered by R Anand from Chinmaya Computing Club</h5><br>
 <h5>Developed by R Anand</h5> <br>
       <h5>Mentored by Aishwarya Bramma</h5> <br>
-      <h5>Guided by Principal Elavarasi Mam</h5></header>
+      <h5>Guided by Principal Elavarasi Mam</h5>
+</header>
 </body>
 </html>
